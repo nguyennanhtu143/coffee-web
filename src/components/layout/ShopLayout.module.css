@@ -1,0 +1,83 @@
+.shopLayout {
+    min-height: 100vh;
+    background-color: #f5f6f8;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 240px;
+    height: 100vh;
+    padding: 20px 14px;
+    overflow-y: auto;
+    background-color: #222831;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
+}
+
+.sidebarTitle {
+    margin-bottom: 12px;
+    padding: 0 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.sidebarLink {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebarLink:hover,
+.active {
+    background-color: #f0a500;
+    color: #000;
+}
+
+.logoutButton {
+    margin-top: auto;
+    padding: 12px 14px;
+    border: none;
+    border-radius: 4px;
+    background-color: #e74c3c;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+
+.logoutButton:hover {
+    background-color: #cf3f31;
+}
+
+.content {
+    width: calc(100% - 240px);
+    max-width: 1200px;
+    min-height: 100vh;
+    margin-left: 240px;
+    padding: 24px;
+}
+
+@media (max-width: 739px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .content {
+        width: calc(100% - 200px);
+        margin-left: 200px;
+        padding: 16px;
+    }
+}

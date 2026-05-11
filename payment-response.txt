@@ -1,0 +1,9 @@
+{
+    "bankName": "MB",
+    "accountNumber": "xxxxxxx",
+    "accountName": "NGUYEN ANH TU",
+    "amount": 3000,
+    "transferContent": "DH12",
+    "qrUrl": "https://qr.sepay.vn/img?acc=xxx&bank=MB&amount=3000&des=DH12",
+    "orderId": 12
+}

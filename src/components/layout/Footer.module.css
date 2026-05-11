@@ -1,0 +1,88 @@
+/* Footer section - dark background */
+.footer_section {
+    padding: 70px 0 45px 0;
+    background-color: #222831;
+    text-align: center;
+    color: #fff;
+}
+
+.footer_heading {
+    font-size: 2.8rem;
+    font-family: 'Dancing Script', cursive;
+    line-height: 2.8rem;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Contact column */
+.contact_link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.contact_item {
+    text-decoration: none;
+    color: #fff;
+    margin: 5px 0;
+    font-size: 1.6rem;
+}
+
+.contact_item:hover {
+    color: #ffbe33;
+}
+
+.contact_item i {
+    padding: 0 5px;
+}
+
+/* Logo column */
+.logo {
+    font-size: 3.8rem;
+    font-family: 'Dancing Script', cursive;
+    text-decoration: none;
+    color: #fff;
+    line-height: 3.8rem;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.paragraph {
+    font-size: 1.6rem;
+    line-height: 2.4rem;
+    color: #dbdbdb;
+    margin-bottom: 16px;
+}
+
+.social {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.social_link {
+    text-decoration: none;
+    background-color: #fff;
+    border-radius: 100%;
+    font-size: 1.8rem;
+    height: 30px;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #222831;
+    margin: 0 2.5px;
+}
+
+.social_link:hover {
+    color: #ffbe33;
+}
+
+/* Time column */
+.time_text {
+    font-size: 1.6rem;
+    line-height: 2.4rem;
+    color: #dbdbdb;
+    margin-bottom: 16px;
+}

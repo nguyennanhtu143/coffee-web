@@ -1,0 +1,79 @@
+{
+    "content": [
+        {
+            "id": null,
+            "productId": 3,
+            "name": "Americano",
+            "description": "Ngon",
+            "image": "http://res.cloudinary.com/diorkbloc/image/upload/v1774693147/mpspoi3njmpgtf4aitkc.jpg",
+            "minPrice": 1000,
+            "averageRatting": null,
+            "sizes": [
+                {
+                    "id": 3,
+                    "productId": 3,
+                    "size": "S",
+                    "price": 1000,
+                    "description": "Nhỏ - 250ml"
+                },
+                {
+                    "id": 4,
+                    "productId": 3,
+                    "size": "M",
+                    "price": 1500,
+                    "description": "Vừa - 350ml"
+                }
+            ]
+        },
+        {
+            "id": null,
+            "productId": 2,
+            "name": "Capuchino",
+            "description": "Ngon",
+            "image": "http://res.cloudinary.com/diorkbloc/image/upload/v1774659601/zg5lslaykzjyjhl1nfen.jpg",
+            "minPrice": 25000,
+            "averageRatting": null,
+            "sizes": [
+                {
+                    "id": 1,
+                    "productId": 2,
+                    "size": "S",
+                    "price": 25000,
+                    "description": "Nhỏ - 250ml"
+                },
+                {
+                    "id": 2,
+                    "productId": 2,
+                    "size": "M",
+                    "price": 35000,
+                    "description": "Vừa - 300ml"
+                }
+            ]
+        }
+    ],
+    "pageable": {
+        "pageNumber": 0,
+        "pageSize": 10,
+        "sort": {
+            "empty": true,
+            "sorted": false,
+            "unsorted": true
+        },
+        "offset": 0,
+        "paged": true,
+        "unpaged": false
+    },
+    "last": true,
+    "totalElements": 2,
+    "totalPages": 1,
+    "size": 10,
+    "number": 0,
+    "sort": {
+        "empty": true,
+        "sorted": false,
+        "unsorted": true
+    },
+    "first": true,
+    "numberOfElements": 2,
+    "empty": false
+}

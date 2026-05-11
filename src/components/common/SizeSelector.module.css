@@ -1,0 +1,12 @@
+.container { margin: 12px 0; }
+.label { font-weight: 500; margin-bottom: 8px; display: block; color: #333; }
+.options { display: flex; gap: 8px; margin-bottom: 8px; }
+.btn {
+    width: 48px; height: 48px; border: 2px solid #ddd; border-radius: 8px;
+    background: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; color: #333;
+}
+.btn:hover { border-color: #8B4513; color: #8B4513; }
+.active { border-color: #8B4513; background: #8B4513; color: #fff; }
+.price { font-size: 14px; color: #8B4513; font-weight: 500; margin: 4px 0; }
+.desc { font-size: 13px; color: #999; margin: 2px 0; }
