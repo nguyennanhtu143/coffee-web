@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-const NO_FOOTER_PAGES = ['/cart', '/orders', '/checkout', '/bank-transfer', '/profile', '/change-password'];
+const NO_FOOTER_PAGES = ['/cart', '/orders', '/checkout', '/bank-transfer', '/profile', '/change-password', '/addresses'];
 
 export default function CustomerLayout() {
     const pathname = useLocation().pathname;

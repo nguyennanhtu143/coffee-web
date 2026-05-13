@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styles from './ShopLayout.module.css';
@@ -16,15 +16,35 @@ const tabs = [
 export default function ShopLayout() {
     const location = useLocation();
     const { logout } = useAuth();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const closeSidebar = () => setSidebarOpen(false);
 
     return (
         <div className={styles.shopLayout}>
-            <nav className={styles.sidebar}>
-                <div className={styles.sidebarTitle}>Admin</div>
+            <button
+                type="button"
+                className={styles.menuButton}
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Mở menu quản trị"
+            >
+                <i className="fa fa-bars"></i>
+            </button>
+
+            {sidebarOpen && <button type="button" className={styles.overlay} onClick={closeSidebar} aria-label="Đóng menu quản trị" />}
+
+            <nav className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+                <div className={styles.sidebarHeader}>
+                    <div className={styles.sidebarTitle}>Admin</div>
+                    <button type="button" className={styles.closeButton} onClick={closeSidebar} aria-label="Đóng menu quản trị">
+                        <i className="fa fa-times"></i>
+                    </button>
+                </div>
                 {tabs.map(tab => (
                     <Link
                         key={tab.path}
                         to={tab.path}
+                        onClick={closeSidebar}
                         className={`${styles.sidebarLink} ${location.pathname === tab.path ? styles.active : ''}`}
                     >
                         {tab.label}

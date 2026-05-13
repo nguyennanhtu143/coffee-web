@@ -1,4 +1,5 @@
 export interface Product {
+    id?: number;
     productId: number;
     name: string;
     description?: string;
@@ -70,6 +71,17 @@ export interface User {
     email?: string;
     phoneNumber?: string;
     imageUrl?: string;
+}
+
+export interface UserAddress {
+    addressId: number;
+    fullName: string;
+    phoneNumber: string;
+    email: string;
+    address: string;
+    toDistrictId: number;
+    toWardCode: string;
+    isDefault: boolean;
 }
 
 export interface Page<T> {

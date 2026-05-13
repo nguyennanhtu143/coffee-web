@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axiosClient from '../../api/axiosClient';
@@ -64,6 +64,7 @@ export default function Navbar() {
                                 <>
                                     <li><Link to="/orders">Đơn mua</Link></li>
                                     <li><Link to="/profile">Thông tin cá nhân</Link></li>
+                                    <li><Link to="/addresses">Sổ địa chỉ</Link></li>
                                     <li><a href="#" onClick={handleLogout}>Đăng xuất</a></li>
                                 </>
                             ) : (

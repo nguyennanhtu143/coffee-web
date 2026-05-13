@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosClient from '../../api/axiosClient';
 import { useAuth } from '../../context/AuthContext';
 import useShippingAddress from '../../hooks/useShippingAddress';
-import { ApplyCouponResult } from '../../types';
+import { ApplyCouponResult, UserAddress } from '../../types';
 import SizeTag from '../../components/common/SizeTag';
 import { toast } from 'react-toastify';
 
@@ -12,10 +12,15 @@ export default function CheckoutPage() {
     const navigate = useNavigate();
     const { token } = useAuth();
     const shipping = useShippingAddress();
+    const { calculateFee, loadProvinces } = shipping;
     const provinceRef = useRef<HTMLSelectElement>(null);
     const districtRef = useRef<HTMLSelectElement>(null);
     const wardRef = useRef<HTMLSelectElement>(null);
 
+    const [addresses, setAddresses] = useState<UserAddress[]>([]);
+    const [addressMode, setAddressMode] = useState<'saved' | 'manual'>('manual');
+    const [selectedAddressId, setSelectedAddressId] = useState('');
+    const [saveManualAddress, setSaveManualAddress] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
@@ -25,45 +30,61 @@ export default function CheckoutPage() {
     const [appliedCoupons, setAppliedCoupons] = useState<ApplyCouponResult[]>([]);
 
     const products = sp.getAll('products[]').map(p => JSON.parse(p));
+    const selectedAddress = addresses.find(a => String(a.addressId) === selectedAddressId);
     const productTotal = products.reduce((s: number, p: any) => s + p.totalPrice, 0);
-
-    // Tính tổng giảm giá sản phẩm từ tất cả coupons (trừ FREE_SHIP)
-    const totalProductDiscount = appliedCoupons
-        .filter(c => !c.freeShip)
-        .reduce((sum, c) => sum + c.discountAmount, 0);
+    const totalProductDiscount = appliedCoupons.filter(c => !c.freeShip).reduce((sum, c) => sum + c.discountAmount, 0);
     const finalProduct = Math.max(0, productTotal - totalProductDiscount);
-
-    // Tính phí ship sau giảm (FREE_SHIP coupons)
     const freeShipCoupon = appliedCoupons.find(c => c.freeShip);
     let actualShippingFee = shipping.shippingFee;
     if (freeShipCoupon) {
-        if (freeShipCoupon.maxShippingDiscount && freeShipCoupon.maxShippingDiscount < shipping.shippingFee) {
-            actualShippingFee = shipping.shippingFee - freeShipCoupon.maxShippingDiscount;
-        } else {
-            actualShippingFee = 0;
-        }
+        actualShippingFee = freeShipCoupon.maxShippingDiscount && freeShipCoupon.maxShippingDiscount < shipping.shippingFee
+            ? shipping.shippingFee - freeShipCoupon.maxShippingDiscount
+            : 0;
     }
     const shippingDiscount = shipping.shippingFee - actualShippingFee;
     const grand = finalProduct + actualShippingFee;
 
+    const loadAddresses = useCallback(async () => {
+        const data: any = await axiosClient.get('/user-address/get-addresses').catch(() => []);
+        const list: UserAddress[] = data || [];
+        setAddresses(list);
+        if (list.length > 0) {
+            const defaultAddress = list.find(a => a.isDefault) || list[0];
+            setAddressMode('saved');
+            setSelectedAddressId(String(defaultAddress.addressId));
+            calculateFee(defaultAddress.toDistrictId, defaultAddress.toWardCode);
+        }
+    }, [calculateFee]);
+
+    // Initial checkout bootstrap only: load profile, provinces, and saved addresses once.
     useEffect(() => {
-        shipping.loadProvinces();
+        loadProvinces();
         axiosClient.get('/user/get-information').then((d: any) => {
             if (d) { setName(d.fullName || ''); setEmail(d.email || ''); setPhone(d.phoneNumber || ''); }
         }).catch(() => {});
+        loadAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const chooseSavedAddress = (addressId: string) => {
+        setSelectedAddressId(addressId);
+        const nextAddress = addresses.find(a => String(a.addressId) === addressId);
+        if (nextAddress) {
+            calculateFee(nextAddress.toDistrictId, nextAddress.toWardCode);
+        }
+    };
 
     const applyCoupon = async () => {
         if (!couponCode.trim()) return;
-        // Kiểm tra trùng mã
         if (appliedCoupons.some(c => c.code.toUpperCase() === couponCode.trim().toUpperCase())) {
-            toast.error('Mã này đã được áp dụng'); return;
+            toast.error('Mã này đã được áp dụng');
+            return;
         }
-        // Kiểm tra đã có FREE_SHIP chưa (chỉ 1 mã free ship)
         try {
             const r: any = await axiosClient.post('/coupon/apply?code=' + couponCode + '&orderTotal=' + productTotal);
             if (r.freeShip && appliedCoupons.some(c => c.freeShip)) {
-                toast.error('Chỉ được áp dụng 1 mã miễn phí ship'); return;
+                toast.error('Chỉ được áp dụng 1 mã miễn phí ship');
+                return;
             }
             setAppliedCoupons([...appliedCoupons, r]);
             setCouponCode('');
@@ -73,29 +94,87 @@ export default function CheckoutPage() {
 
     const removeCoupon = (code: string) => {
         setAppliedCoupons(appliedCoupons.filter(c => c.code !== code));
-        toast.success('Đã xoá mã ' + code);
+        toast.success('Đã xóa mã ' + code);
+    };
+
+    const createManualAddress = async () => {
+        const body = {
+            fullName: name,
+            phoneNumber: phone,
+            email,
+            address,
+            toDistrictId: shipping.selectedDistrictId!,
+            toWardCode: shipping.selectedWardCode!,
+            isDefault: addresses.length === 0,
+        };
+        const created: any = await axiosClient.post('/user-address/create', body);
+        if (created?.addressId) return created.addressId;
+
+        const reloaded: any = await axiosClient.get('/user-address/get-addresses').catch(() => []);
+        const match = (reloaded || []).find((a: UserAddress) =>
+            a.address === body.address &&
+            a.toDistrictId === body.toDistrictId &&
+            a.toWardCode === body.toWardCode
+        );
+        return match?.addressId;
+    };
+
+    const buildManualFullAddress = () => {
+        return address + ', ' + (wardRef.current?.selectedOptions[0]?.text || '') + ', ' + (districtRef.current?.selectedOptions[0]?.text || '') + ', ' + (provinceRef.current?.selectedOptions[0]?.text || '');
     };
 
     const submit = async () => {
-        if (!shipping.selectedDistrictId || !shipping.selectedWardCode) { toast.error('Chọn đầy đủ địa chỉ!'); return; }
-        if (!address.trim()) { toast.error('Nhập địa chỉ chi tiết!'); return; }
-        const fullAddr = address + ', ' + (wardRef.current?.selectedOptions[0]?.text || '') + ', ' + (districtRef.current?.selectedOptions[0]?.text || '') + ', ' + (provinceRef.current?.selectedOptions[0]?.text || '');
+        let orderAddressId: number | undefined;
 
-        const orderInput = {
-            fullName: name, phoneNumber: phone, email, address: fullAddr, paymentMethod: method,
-            totalPrice: grand, toDistrictId: shipping.selectedDistrictId, toWardCode: shipping.selectedWardCode, shippingFee: shipping.shippingFee,
-            productOrderInputs: products.map((p: any) => ({ cartId: p.cartId, productSizeId: p.productSizeId, nameProduct: p.nameProduct, size: p.size || '', price: p.price, image: p.imageUrl, quantityOrder: p.quantityOrder, totalPrice: p.totalPrice }))
+        if (addressMode === 'saved') {
+            if (!selectedAddress) {
+                toast.error('Chọn địa chỉ giao hàng');
+                return;
+            }
+            orderAddressId = selectedAddress.addressId;
+        } else {
+            if (!shipping.selectedDistrictId || !shipping.selectedWardCode) { toast.error('Chọn đầy đủ địa chỉ!'); return; }
+            if (!address.trim()) { toast.error('Nhập địa chỉ chi tiết!'); return; }
+            if (!name.trim() || !phone.trim() || !email.trim()) { toast.error('Nhập đầy đủ thông tin người nhận!'); return; }
+            if (saveManualAddress) {
+                try {
+                    orderAddressId = await createManualAddress();
+                    if (!orderAddressId) {
+                        toast.error('Không thể lưu địa chỉ mới');
+                        return;
+                    }
+                } catch (e: any) {
+                    toast.error(e.message || 'Không thể lưu địa chỉ mới');
+                    return;
+                }
+            }
+        }
+
+        const orderInput: any = {
+            paymentMethod: method,
+            totalPrice: grand,
+            shippingFee: shipping.shippingFee,
+            productOrderInputs: products.map((p: any) => ({ cartId: p.cartId, productSizeId: p.productSizeId, nameProduct: p.nameProduct, size: p.size || '', price: p.price, image: p.imageUrl, quantityOrder: p.quantityOrder, totalPrice: p.totalPrice })),
         };
+
+        if (orderAddressId) {
+            orderInput.addressId = orderAddressId;
+        } else {
+            orderInput.fullName = name;
+            orderInput.phoneNumber = phone;
+            orderInput.email = email;
+            orderInput.address = buildManualFullAddress();
+            orderInput.toDistrictId = shipping.selectedDistrictId;
+            orderInput.toWardCode = shipping.selectedWardCode;
+        }
 
         try {
             const data: any = await axiosClient.post('/order', orderInput);
             if (!data) return;
             const orderId = data.orderId;
-
-            // Gọi API thanh toán
             const payResp = await fetch(process.env.REACT_APP_API_BASE_URL + '/payment?orderId=' + orderId + '&method=' + method, {
                 method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: { Authorization: 'Bearer ' + token },
             });
 
             if (!payResp.ok) {
@@ -105,55 +184,80 @@ export default function CheckoutPage() {
             }
 
             let payResult = await payResp.text();
-
-            // Spring có thể double-encode string → unwrap
             if (payResult.startsWith('"') && payResult.endsWith('"')) {
-                try { payResult = JSON.parse(payResult); } catch (e) { /* giữ nguyên */ }
+                try { payResult = JSON.parse(payResult); } catch (e) {}
             }
 
             if (method === 'sepay') {
-                // Luôn redirect sang trang QR khi method là sepay (giống FE cũ)
                 localStorage.setItem('bankTransferInfo', payResult);
                 navigate('/bank-transfer');
             } else {
                 toast.success('Đặt hàng thành công!');
                 setTimeout(() => navigate('/orders'), 1500);
             }
-        } catch (e: any) { toast.error('Lỗi: ' + e.message); }
+        } catch (e: any) {
+            toast.error('Lỗi: ' + e.message);
+        }
     };
 
     const labelStyle: React.CSSProperties = { display: 'block', marginBottom: '6px', fontWeight: 500, fontSize: '14px' };
     const inputStyle: React.CSSProperties = { width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', marginBottom: '14px' };
 
     return (
-        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto', padding: '20px' }}>
             <h1 style={{ textAlign: 'center', marginBottom: '24px' }}>Thanh Toán</h1>
 
             <section style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '18px', marginBottom: '12px' }}>Thông tin người nhận</h2>
-                <label style={labelStyle}>Họ tên:</label><input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-                <label style={labelStyle}>Email:</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
-                <label style={labelStyle}>Số điện thoại:</label><input value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
-            </section>
-
-            <section style={{ marginBottom: '24px' }}>
                 <h2 style={{ fontSize: '18px', marginBottom: '12px' }}>Địa chỉ giao hàng</h2>
-                <label style={labelStyle}>Tỉnh / Thành phố:</label>
-                <select ref={provinceRef} onChange={e => shipping.onProvinceChange(e.target.value)} style={inputStyle}>
-                    <option value="">-- Chọn --</option>
-                    {shipping.provinces.map(p => <option key={p.ProvinceID} value={p.ProvinceID}>{p.ProvinceName}</option>)}
-                </select>
-                <label style={labelStyle}>Khu vực:</label>
-                <select ref={districtRef} disabled={!shipping.districts.length} onChange={e => shipping.onDistrictChange(e.target.value)} style={inputStyle}>
-                    <option value="">-- Chọn --</option>
-                    {shipping.districts.map(d => <option key={d.DistrictID} value={d.DistrictID}>{d.DistrictName}</option>)}
-                </select>
-                <label style={labelStyle}>Phường / Xã:</label>
-                <select ref={wardRef} disabled={!shipping.wards.length} onChange={e => shipping.onWardChange(e.target.value)} style={inputStyle}>
-                    <option value="">-- Chọn --</option>
-                    {shipping.wards.map(w => <option key={w.WardCode} value={w.WardCode}>{w.WardName}</option>)}
-                </select>
-                <label style={labelStyle}>Địa chỉ chi tiết:</label><input value={address} onChange={e => setAddress(e.target.value)} placeholder="Số nhà, tên đường..." style={inputStyle} />
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                    <button onClick={() => setAddressMode('saved')} disabled={addresses.length === 0} style={{ flex: 1, padding: '10px', border: '1px solid #ddd', borderRadius: '6px', background: addressMode === 'saved' ? '#8B4513' : '#fff', color: addressMode === 'saved' ? '#fff' : '#333', cursor: addresses.length ? 'pointer' : 'not-allowed' }}>Dùng địa chỉ đã lưu</button>
+                    <button onClick={() => setAddressMode('manual')} style={{ flex: 1, padding: '10px', border: '1px solid #ddd', borderRadius: '6px', background: addressMode === 'manual' ? '#8B4513' : '#fff', color: addressMode === 'manual' ? '#fff' : '#333', cursor: 'pointer' }}>Nhập địa chỉ mới</button>
+                </div>
+
+                {addressMode === 'saved' && (
+                    <div>
+                        <label style={labelStyle}>Chọn địa chỉ:</label>
+                        <select value={selectedAddressId} onChange={e => chooseSavedAddress(e.target.value)} style={inputStyle}>
+                            {addresses.map(a => <option key={a.addressId} value={a.addressId}>{a.fullName} - {a.phoneNumber} - {a.address}{a.isDefault ? ' (Mặc định)' : ''}</option>)}
+                        </select>
+                        {selectedAddress && (
+                            <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', marginBottom: '14px' }}>
+                                <strong>{selectedAddress.fullName}</strong>
+                                <p style={{ margin: '6px 0' }}>{selectedAddress.phoneNumber} | {selectedAddress.email}</p>
+                                <p style={{ margin: 0 }}>{selectedAddress.address}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {addressMode === 'manual' && (
+                    <>
+                        <label style={labelStyle}>Họ tên:</label><input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+                        <label style={labelStyle}>Email:</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+                        <label style={labelStyle}>Số điện thoại:</label><input value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
+                        <label style={labelStyle}>Tỉnh / Thành phố:</label>
+                        <select ref={provinceRef} onChange={e => shipping.onProvinceChange(e.target.value)} style={inputStyle}>
+                            <option value="">-- Chọn --</option>
+                            {shipping.provinces.map(p => <option key={p.ProvinceID} value={p.ProvinceID}>{p.ProvinceName}</option>)}
+                        </select>
+                        <label style={labelStyle}>Khu vực:</label>
+                        <select ref={districtRef} disabled={!shipping.districts.length} onChange={e => shipping.onDistrictChange(e.target.value)} style={inputStyle}>
+                            <option value="">-- Chọn --</option>
+                            {shipping.districts.map(d => <option key={d.DistrictID} value={d.DistrictID}>{d.DistrictName}</option>)}
+                        </select>
+                        <label style={labelStyle}>Phường / Xã:</label>
+                        <select ref={wardRef} disabled={!shipping.wards.length} onChange={e => shipping.onWardChange(e.target.value)} style={inputStyle}>
+                            <option value="">-- Chọn --</option>
+                            {shipping.wards.map(w => <option key={w.WardCode} value={w.WardCode}>{w.WardName}</option>)}
+                        </select>
+                        <label style={labelStyle}>Địa chỉ chi tiết:</label><input value={address} onChange={e => setAddress(e.target.value)} placeholder="Số nhà, tên đường..." style={inputStyle} />
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', fontSize: '14px' }}>
+                            <input type="checkbox" checked={saveManualAddress} onChange={e => setSaveManualAddress(e.target.checked)} />
+                            Lưu địa chỉ này
+                        </label>
+                    </>
+                )}
+
                 {shipping.shippingFee > 0 && <p style={{ background: '#f0f8ff', padding: '10px', borderRadius: '6px' }}>Phí vận chuyển: <strong>{shipping.shippingFee.toLocaleString('vi-VN')}₫</strong></p>}
                 {shipping.loadingFee && <p style={{ color: '#999' }}>Đang tính phí...</p>}
             </section>
@@ -178,7 +282,6 @@ export default function CheckoutPage() {
                     <input value={couponCode} onChange={e => setCouponCode(e.target.value)} placeholder="Mã giảm giá" style={{ flex: 1, padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
                     <button onClick={applyCoupon} style={{ padding: '8px 16px', background: '#8B4513', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Áp dụng</button>
                 </div>
-                {/* Danh sách mã đã áp dụng */}
                 {appliedCoupons.length > 0 && (
                     <div style={{ marginBottom: '12px' }}>
                         {appliedCoupons.map(c => (
@@ -190,18 +293,14 @@ export default function CheckoutPage() {
                                         : <span style={{ color: '#166534', marginLeft: '8px' }}>-{c.discountAmount?.toLocaleString('vi-VN')}₫</span>
                                     }
                                 </div>
-                                <button onClick={() => removeCoupon(c.code)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '16px' }}>✕</button>
+                                <button onClick={() => removeCoupon(c.code)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '16px' }}>×</button>
                             </div>
                         ))}
                     </div>
                 )}
                 <div style={{ fontSize: '15px', marginTop: '8px' }}>
-                    <p>Tiền SP: <strong>{productTotal.toLocaleString('vi-VN')}₫</strong>
-                        {totalProductDiscount > 0 && <span style={{ color: 'green', marginLeft: '8px' }}>(-{totalProductDiscount.toLocaleString('vi-VN')}₫)</span>}
-                    </p>
-                    <p>Phí ship: <strong>{shipping.shippingFee > 0 ? shipping.shippingFee.toLocaleString('vi-VN') + '₫' : '0₫'}</strong>
-                        {shippingDiscount > 0 && <span style={{ color: '#3498db', marginLeft: '8px' }}>(-{shippingDiscount.toLocaleString('vi-VN')}₫)</span>}
-                    </p>
+                    <p>Tiền SP: <strong>{productTotal.toLocaleString('vi-VN')}₫</strong>{totalProductDiscount > 0 && <span style={{ color: 'green', marginLeft: '8px' }}>(-{totalProductDiscount.toLocaleString('vi-VN')}₫)</span>}</p>
+                    <p>Phí ship: <strong>{shipping.shippingFee > 0 ? shipping.shippingFee.toLocaleString('vi-VN') + '₫' : '0₫'}</strong>{shippingDiscount > 0 && <span style={{ color: '#3498db', marginLeft: '8px' }}>(-{shippingDiscount.toLocaleString('vi-VN')}₫)</span>}</p>
                     <p style={{ fontSize: '18px', fontWeight: 700, marginTop: '8px' }}>Tổng: {grand.toLocaleString('vi-VN')}₫</p>
                 </div>
             </section>

@@ -24,6 +24,28 @@ GET /api/v1/product/admin-products?sortBy=name&direction=desc&page=0&size=20
 ```
 
 Response is `Page<ProductOutput>`.
+```
+public class ProductOutput {
+    private Long id;
+    private Long productId;
+    private String name;
+    private String description;
+    private String image;
+    private Integer minPrice;
+    private Double averageRatting;
+    private List<ProductSizeOutput> sizes;
+}
+```
+
+```
+public class ProductSizeOutput {
+    private Long id;
+    private Long productId;
+    private String size;
+    private Integer price;
+    private String description;
+}
+```
 
 ## Admin Orders
 
@@ -53,3 +75,32 @@ GET /api/v1/shop-order/get-orders?createdFrom=2026-05-01T00:00:00&createdTo=2026
 ```
 
 Response is `Page<ProductOrdersOutput>`.
+
+```
+public class ProductOrdersOutput {
+    private Long orderId;
+    private List<ProductOrderOutput> productOrderOutputs;
+    private CancelOrderOutput cancelOrderOutput;
+    private String state;
+    private Integer totalPrice;
+}
+```
+
+```
+public class ProductOrderOutput {
+    private Long productSizeId;
+    private String productName;
+    private String size;
+    private Integer price;
+    private String image;
+    private Integer quantityOrder;
+    private Integer totalPrice;
+}
+```
+
+```
+public class CancelOrderOutput {
+    private String name;
+    private String reason;
+}
+```

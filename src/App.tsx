@@ -24,6 +24,7 @@ import CheckoutPage from './pages/customer/CheckoutPage';
 import OrderPage from './pages/customer/OrderPage';
 import ProfilePage from './pages/customer/ProfilePage';
 import ChangePasswordPage from './pages/customer/ChangePasswordPage';
+import AddressBookPage from './pages/customer/AddressBookPage';
 import BankTransferPage from './pages/customer/BankTransferPage';
 
 import ProductManager from './components/shop/ProductManager';
@@ -56,6 +57,7 @@ function App() {
                         <Route path="/orders" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                         <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+                        <Route path="/addresses" element={<ProtectedRoute><AddressBookPage /></ProtectedRoute>} />
                         <Route path="/bank-transfer" element={<ProtectedRoute><BankTransferPage /></ProtectedRoute>} />
                     </Route>
 
