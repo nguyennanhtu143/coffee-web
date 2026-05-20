@@ -1,0 +1,395 @@
+/* ── Statistics Page ─────────────────────────────────────────────────────── */
+
+.container {
+    padding: 28px 32px;
+    font-family: 'Roboto', sans-serif;
+    max-width: 1200px;
+}
+
+/* Header */
+.header {
+    margin-bottom: 24px;
+}
+.header h2 {
+    font-size: 2.4rem;
+    color: #1a1a1a;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+.header p {
+    font-size: 1.4rem;
+    color: #888;
+    margin: 0;
+}
+
+/* ── Date Range Bar ─────────────────────────────────────────────────────────── */
+
+.dateRangeBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.dateRangeBar label {
+    font-size: 1.4rem;
+    color: #555;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.dateInput {
+    padding: 9px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    color: #333;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+.dateInput:focus {
+    border-color: #ffbe33;
+}
+
+.applyBtn {
+    padding: 9px 22px;
+    background: linear-gradient(135deg, #ffbe33, #ffa500);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    white-space: nowrap;
+}
+.applyBtn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.divider {
+    width: 1px;
+    height: 28px;
+    background: #e8e8e8;
+    margin: 0 4px;
+}
+
+.quickBtns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.quickBtn {
+    padding: 7px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    background: #fff;
+    font-size: 1.3rem;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+.quickBtn:hover {
+    border-color: #ffbe33;
+    color: #c87d00;
+    background: #fffbf0;
+}
+.quickBtnActive {
+    border-color: #ffbe33;
+    background: #fff8e6;
+    color: #c87d00;
+    font-weight: 700;
+}
+
+/* ── Error Banner ───────────────────────────────────────────────────────────── */
+
+.errorBanner {
+    background: #fff3f3;
+    border: 1px solid #ffaaaa;
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #cc0000;
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+}
+
+/* ── Stat Cards ─────────────────────────────────────────────────────────────── */
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.statCard {
+    background: #fff;
+    border: 1px solid #f0ece4;
+    border-radius: 14px;
+    padding: 22px 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.statCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+}
+.statLabel {
+    font-size: 1.3rem;
+    color: #999;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+.statValue {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #8B4513;
+    line-height: 1.2;
+}
+
+/* ── Section Title ──────────────────────────────────────────────────────────── */
+
+.sectionTitle {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sectionBadge {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #aaa;
+    background: #f5f5f5;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+/* ── Chart Card ─────────────────────────────────────────────────────────────── */
+
+.chartCard {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 28px;
+}
+
+/* Y-axis + bars layout */
+.chartOuter {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    height: 280px;
+}
+
+.yAxis {
+    width: 58px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-bottom: 26px; /* reserve space for x-labels */
+    flex-shrink: 0;
+}
+.yLabel {
+    font-size: 1.15rem;
+    color: #bbb;
+    text-align: right;
+    padding-right: 10px;
+    line-height: 1;
+}
+
+.barsArea {
+    flex: 1;
+    border-left: 2px solid #e8e8e8;
+    border-bottom: 2px solid #e8e8e8;
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    padding: 8px 6px 0;
+    overflow-x: auto;
+    position: relative;
+    min-height: 0;
+}
+/* thin scrollbar */
+.barsArea::-webkit-scrollbar { height: 3px; }
+.barsArea::-webkit-scrollbar-track { background: transparent; }
+.barsArea::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 3px; }
+
+.barWrapper {
+    flex: 1;
+    min-width: 12px;
+    max-width: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    cursor: pointer;
+    position: relative;
+}
+
+.barFill {
+    width: 60%;
+    min-height: 2px;
+    background: linear-gradient(180deg, #e8a050, #8B4513);
+    border-radius: 3px 3px 0 0;
+    transition: height 0.4s ease, opacity 0.2s;
+}
+.barWrapper:hover .barFill {
+    opacity: 0.75;
+    background: linear-gradient(180deg, #ffbe33, #d4861a);
+}
+
+.xLabel {
+    font-size: 1.05rem;
+    color: #c0c0c0;
+    margin-top: 5px;
+    white-space: nowrap;
+    position: absolute;
+    bottom: -22px;
+    line-height: 1;
+}
+
+/* ── Tooltip ────────────────────────────────────────────────────────────────── */
+
+.tooltip {
+    position: fixed;
+    background: #1e1e1e;
+    color: #fff;
+    border-radius: 10px;
+    padding: 11px 15px;
+    font-size: 1.3rem;
+    pointer-events: none;
+    z-index: 99999;
+    white-space: nowrap;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+    transform: translate(-50%, calc(-100% - 12px));
+    animation: tooltipIn 0.12s ease;
+}
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-bottom: none;
+    border-top-color: #1e1e1e;
+}
+@keyframes tooltipIn {
+    from { opacity: 0; transform: translate(-50%, calc(-100% - 6px)); }
+    to   { opacity: 1; transform: translate(-50%, calc(-100% - 12px)); }
+}
+.tooltipDate {
+    font-weight: 700;
+    color: #ffbe33;
+    margin-bottom: 5px;
+    font-size: 1.25rem;
+}
+.tooltipRow {
+    color: #ddd;
+    line-height: 1.6;
+}
+
+/* ── State Tags ─────────────────────────────────────────────────────────────── */
+
+.tagList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+.tag {
+    background: #f5f0e8;
+    color: #6b3a10;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 1.4rem;
+}
+
+/* ── Top Products Table ─────────────────────────────────────────────────────── */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table th {
+    background: #faf8f4;
+    color: #666;
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 2px solid #f0ece4;
+}
+.table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #f5f2ed;
+    font-size: 1.4rem;
+    color: #333;
+    vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #fdfbf7; }
+
+.productCell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.productImg {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+    border: 1px solid #f0ece4;
+}
+.sizeTag {
+    font-size: 1.2rem;
+    color: #aaa;
+    margin-left: 2px;
+}
+
+/* Rank badge */
+.rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0 auto;
+}
+.rank1    { background: #FFD700; color: #6b4f00; }
+.rank2    { background: #C8C8C8; color: #444; }
+.rank3    { background: #CD7F32; color: #fff; }
+.rankOther { background: #f0f0f0; color: #999; }
+
+/* Loading */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 160px;
+    color: #bbb;
+    font-size: 1.5rem;
+    gap: 8px;
+}
