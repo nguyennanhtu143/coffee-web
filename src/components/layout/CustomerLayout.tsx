@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import ChatbotWidget from '../common/ChatbotWidget';
 
 const NO_FOOTER_PAGES = ['/cart', '/orders', '/checkout', '/bank-transfer', '/profile', '/change-password', '/addresses'];
 
@@ -21,6 +22,7 @@ export default function CustomerLayout() {
                 </>
             )}
             {showFooter && <Footer />}
+            <ChatbotWidget />
         </div>
     );
 }
