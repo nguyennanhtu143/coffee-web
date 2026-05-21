@@ -79,8 +79,12 @@ export interface UserAddress {
     phoneNumber: string;
     email: string;
     address: string;
+    provinceId?: number;
+    provinceName?: string;
     toDistrictId: number;
+    districtName?: string;
     toWardCode: string;
+    wardName?: string;
     isDefault: boolean;
 }
 

@@ -98,14 +98,23 @@ export default function CheckoutPage() {
     };
 
     const createManualAddress = async () => {
+        // Tìm tên tỉnh/huyện/xã từ danh sách GHN đã load
+        const province = shipping.provinces.find(p => p.ProvinceID === shipping.selectedProvinceId);
+        const district = shipping.districts.find(d => d.DistrictID === shipping.selectedDistrictId);
+        const ward     = shipping.wards.find(w => w.WardCode === shipping.selectedWardCode);
+
         const body = {
-            fullName: name,
-            phoneNumber: phone,
+            fullName:     name,
+            phoneNumber:  phone,
             email,
             address,
+            provinceId:   shipping.selectedProvinceId ?? 0,
+            provinceName: province?.ProvinceName ?? '',
             toDistrictId: shipping.selectedDistrictId!,
-            toWardCode: shipping.selectedWardCode!,
-            isDefault: addresses.length === 0,
+            districtName: district?.DistrictName ?? '',
+            toWardCode:   shipping.selectedWardCode!,
+            wardName:     ward?.WardName ?? '',
+            isDefault:    addresses.length === 0,
         };
         const created: any = await axiosClient.post('/user-address/create', body);
         if (created?.addressId) return created.addressId;
@@ -218,13 +227,25 @@ export default function CheckoutPage() {
                     <div>
                         <label style={labelStyle}>Chọn địa chỉ:</label>
                         <select value={selectedAddressId} onChange={e => chooseSavedAddress(e.target.value)} style={inputStyle}>
-                            {addresses.map(a => <option key={a.addressId} value={a.addressId}>{a.fullName} - {a.phoneNumber} - {a.address}{a.isDefault ? ' (Mặc định)' : ''}</option>)}
+                            {addresses.map(a => {
+                                const fullLoc = [a.wardName, a.districtName, a.provinceName].filter(Boolean).join(', ');
+                                return (
+                                    <option key={a.addressId} value={a.addressId}>
+                                        {a.fullName} - {a.phoneNumber} - {a.address}{fullLoc ? ', ' + fullLoc : ''}{a.isDefault ? ' (Mặc định)' : ''}
+                                    </option>
+                                );
+                            })}
                         </select>
                         {selectedAddress && (
                             <div style={{ padding: '12px', background: '#fff', border: '1px solid #eee', borderRadius: '8px', marginBottom: '14px' }}>
                                 <strong>{selectedAddress.fullName}</strong>
                                 <p style={{ margin: '6px 0' }}>{selectedAddress.phoneNumber} | {selectedAddress.email}</p>
-                                <p style={{ margin: 0 }}>{selectedAddress.address}</p>
+                                <p style={{ margin: 0 }}>
+                                    📍 {selectedAddress.address}
+                                    {selectedAddress.wardName     && `, ${selectedAddress.wardName}`}
+                                    {selectedAddress.districtName && `, ${selectedAddress.districtName}`}
+                                    {selectedAddress.provinceName  && `, ${selectedAddress.provinceName}`}
+                                </p>
                             </div>
                         )}
                     </div>
@@ -236,9 +257,15 @@ export default function CheckoutPage() {
                         <label style={labelStyle}>Email:</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
                         <label style={labelStyle}>Số điện thoại:</label><input value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
                         <label style={labelStyle}>Tỉnh / Thành phố:</label>
-                        <select ref={provinceRef} onChange={e => shipping.onProvinceChange(e.target.value)} style={inputStyle}>
+                        <select
+                            ref={provinceRef}
+                            onChange={e => shipping.onProvinceChange(e.target.value)}
+                            style={inputStyle}
+                        >
                             <option value="">-- Chọn --</option>
-                            {shipping.provinces.map(p => <option key={p.ProvinceID} value={p.ProvinceID}>{p.ProvinceName}</option>)}
+                            {shipping.provinces.map(p => (
+                                <option key={p.ProvinceID} value={p.ProvinceID}>{p.ProvinceName}</option>
+                            ))}
                         </select>
                         <label style={labelStyle}>Khu vực:</label>
                         <select ref={districtRef} disabled={!shipping.districts.length} onChange={e => shipping.onDistrictChange(e.target.value)} style={inputStyle}>

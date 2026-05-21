@@ -6,6 +6,7 @@ export default function useShippingAddress() {
     const [provinces, setProvinces] = useState<GHNProvince[]>([]);
     const [districts, setDistricts] = useState<GHNDistrict[]>([]);
     const [wards, setWards] = useState<GHNWard[]>([]);
+    const [selectedProvinceId, setSelectedProvinceId] = useState<number | null>(null);
     const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(null);
     const [selectedWardCode, setSelectedWardCode] = useState<string | null>(null);
     const [shippingFee, setShippingFee] = useState(0);
@@ -22,6 +23,7 @@ export default function useShippingAddress() {
     const onProvinceChange = useCallback(async (id: string) => {
         setDistricts([]);
         setWards([]);
+        setSelectedProvinceId(id ? parseInt(id) : null);
         setSelectedDistrictId(null);
         setSelectedWardCode(null);
         setShippingFee(0);
@@ -68,5 +70,38 @@ export default function useShippingAddress() {
         return fee;
     }, []);
 
-    return { provinces, districts, wards, selectedDistrictId, selectedWardCode, shippingFee, loadingFee, loadProvinces, onProvinceChange, onDistrictChange, onWardChange, calculateFee };
+    /**
+     * Dùng khi mở form edit địa chỉ: load lại districts + wards từ GHN
+     * để dropdown hiển thị đúng giá trị đã lưu.
+     */
+    const loadDistrictsAndWards = useCallback(async (provinceId: number, districtId: number) => {
+        setSelectedProvinceId(provinceId);
+        setSelectedDistrictId(districtId);
+
+        const districtData: any = await axiosClient
+            .get('/shipping/districts?provinceId=' + provinceId)
+            .catch(() => []);
+        if (Array.isArray(districtData)) {
+            districtData.sort((a: GHNDistrict, b: GHNDistrict) =>
+                a.DistrictName.localeCompare(b.DistrictName)
+            );
+            setDistricts(districtData);
+        }
+
+        const wardData: any = await axiosClient
+            .get('/shipping/wards?districtId=' + districtId)
+            .catch(() => []);
+        if (Array.isArray(wardData)) {
+            wardData.sort((a: GHNWard, b: GHNWard) => a.WardName.localeCompare(b.WardName));
+            setWards(wardData);
+        }
+    }, []);
+
+    return {
+        provinces, districts, wards,
+        selectedProvinceId, selectedDistrictId, selectedWardCode,
+        shippingFee, loadingFee,
+        loadProvinces, onProvinceChange, onDistrictChange, onWardChange,
+        calculateFee, loadDistrictsAndWards,
+    };
 }
